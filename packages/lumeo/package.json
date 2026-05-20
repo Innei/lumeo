@@ -1,0 +1,67 @@
+{
+  "name": "lumeo",
+  "version": "0.1.0",
+  "description": "Image zoom and multi-image lightbox — a modern TypeScript fork of medium-zoom with album navigation, gestures, keyboard control, and a thumbnail strip.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Innei <cc@innei.in>",
+  "homepage": "https://github.com/Innei/lumeo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Innei/lumeo.git",
+    "directory": "packages/lumeo"
+  },
+  "bugs": {
+    "url": "https://github.com/Innei/lumeo/issues"
+  },
+  "keywords": [
+    "zoom",
+    "image",
+    "lightbox",
+    "gallery",
+    "album",
+    "viewer",
+    "medium-zoom",
+    "photo",
+    "typescript"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.css.ts"
+  ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@vanilla-extract/css": "^1.15.5",
+    "@vanilla-extract/vite-plugin": "^4.0.19",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

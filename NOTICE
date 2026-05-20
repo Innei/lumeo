@@ -1,0 +1,10 @@
+lumeo
+
+This package is a TypeScript fork of medium-zoom, extended into a full image
+viewer with multi-image album navigation, keyboard control, touch gestures,
+and a thumbnail strip.
+
+Original work:
+  medium-zoom — https://github.com/francoischalifour/medium-zoom
+  Copyright (c) 2016-present François Chalifour
+  Licensed under the MIT License.

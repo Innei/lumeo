@@ -1,0 +1,25 @@
+{
+  "name": "lumeo-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --filter ./packages/* build",
+    "build:demo": "pnpm --filter @lumeo/demo build",
+    "dev": "pnpm --filter @lumeo/demo dev",
+    "dev:lib": "pnpm --filter lumeo dev",
+    "test": "pnpm -r --filter ./packages/* test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r --parallel lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,html,yml,yaml}\"",
+    "release": "pnpm --filter lumeo publish --access public --no-git-checks"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
