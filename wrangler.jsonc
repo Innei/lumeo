@@ -2,6 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lumeo",
   "compatibility_date": "2026-05-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "lumeo.innei.dev", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./apps/demo/dist",
     "not_found_handling": "single-page-application"
