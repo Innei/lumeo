@@ -8,7 +8,7 @@ const PAPER = 'var(--lumeo-overlay-bg, #ffffff)'
 export const controls = style({
   position: 'fixed',
   inset: 0,
-  zIndex: 101,
+  zIndex: 10000,
   pointerEvents: 'none',
 })
 
@@ -16,7 +16,7 @@ export const closeButton = style({
   position: 'fixed',
   top: '14px',
   right: '18px',
-  zIndex: 102,
+  zIndex: 10001,
   width: '28px',
   height: '28px',
   display: 'flex',

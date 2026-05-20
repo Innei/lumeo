@@ -17,6 +17,7 @@ globalStyle(':root', {
 globalStyle('.medium-zoom-overlay', {
   position: 'fixed',
   inset: 0,
+  zIndex: 9998,
   background: 'var(--lumeo-overlay-bg, #ffffff)',
   opacity: 0,
   transition: `opacity 380ms ${SPRING}`,
@@ -39,6 +40,7 @@ globalStyle('.medium-zoom-image--hidden', {
 
 globalStyle('.medium-zoom-image--opened', {
   position: 'relative',
+  zIndex: 9999,
   cursor: 'zoom-out',
   willChange: 'transform',
   borderRadius: '3px',
