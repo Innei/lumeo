@@ -38,6 +38,7 @@ export interface ZoomActive {
   template: HTMLElement | null
   zoomed: HTMLImageElement | null
   zoomedHd: HTMLImageElement | null
+  shadow: HTMLDivElement | null
 }
 
 export interface Zoom {

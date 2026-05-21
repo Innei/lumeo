@@ -19,16 +19,23 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
   let startY = 0
   let startX = 0
   let savedTransition = ''
+  let savedShadowTransition = ''
   let visualTarget: HTMLImageElement | null = null
+  let visualShadow: HTMLDivElement | null = null
 
   const restoreVisual = (): void => {
-    if (!visualTarget) {
-      return
+    if (visualTarget) {
+      visualTarget.style.transition = savedTransition
+      visualTarget.style.translate = ''
+      visualTarget.style.opacity = ''
     }
-    visualTarget.style.transition = savedTransition
-    visualTarget.style.translate = ''
-    visualTarget.style.opacity = ''
+    if (visualShadow) {
+      visualShadow.style.transition = savedShadowTransition
+      visualShadow.style.translate = ''
+      visualShadow.style.opacity = ''
+    }
     visualTarget = null
+    visualShadow = null
   }
 
   const onPointerDown = (event: PointerEvent): void => {
@@ -41,10 +48,15 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
     }
     dragging = true
     visualTarget = target
+    visualShadow = deps.active.shadow
     startY = event.clientY
     startX = event.clientX
     savedTransition = target.style.transition
     target.style.transition = 'none'
+    if (visualShadow) {
+      savedShadowTransition = visualShadow.style.transition
+      visualShadow.style.transition = 'none'
+    }
     try {
       host?.setPointerCapture(event.pointerId)
     } catch {
@@ -61,8 +73,13 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
     if (dy <= 0 || Math.abs(dx) > Math.abs(dy)) {
       return
     }
+    const opacity = Math.max(0, 1 - dy / FADE_DISTANCE)
     visualTarget.style.translate = `0 ${dy}px`
-    visualTarget.style.opacity = `${Math.max(0, 1 - dy / FADE_DISTANCE)}`
+    visualTarget.style.opacity = `${opacity}`
+    if (visualShadow) {
+      visualShadow.style.translate = `0 ${dy}px`
+      visualShadow.style.opacity = `${opacity}`
+    }
   }
 
   const onPointerUp = (event: PointerEvent): void => {
@@ -74,7 +91,11 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
     if (dy > CLOSE_DISTANCE && visualTarget) {
       // Restore the original transition so the close animation runs smoothly.
       visualTarget.style.transition = savedTransition
+      if (visualShadow) {
+        visualShadow.style.transition = savedShadowTransition
+      }
       visualTarget = null
+      visualShadow = null
       deps.close()
     } else {
       restoreVisual()
@@ -108,6 +129,7 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
       host = null
       dragging = false
       visualTarget = null
+      visualShadow = null
     },
   }
 }

@@ -89,6 +89,30 @@ export const cloneTarget = (template: HTMLImageElement): HTMLImageElement => {
   return clone
 }
 
+export const createShadow = (template: HTMLImageElement): HTMLDivElement => {
+  const { top, left, width, height } = template.getBoundingClientRect()
+  const shadow = document.createElement('div')
+  const scrollTop =
+    window.scrollY ||
+    document.documentElement.scrollTop ||
+    document.body.scrollTop ||
+    0
+  const scrollLeft =
+    window.scrollX ||
+    document.documentElement.scrollLeft ||
+    document.body.scrollLeft ||
+    0
+
+  shadow.classList.add('medium-zoom-shadow')
+  shadow.style.position = 'absolute'
+  shadow.style.top = `${top + scrollTop}px`
+  shadow.style.left = `${left + scrollLeft}px`
+  shadow.style.width = `${width}px`
+  shadow.style.height = `${height}px`
+
+  return shadow
+}
+
 export const createCustomEvent = (
   type: string,
   params?: CustomEventInit,

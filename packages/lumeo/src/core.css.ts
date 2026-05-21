@@ -44,5 +44,21 @@ globalStyle('.medium-zoom-image--opened', {
   cursor: 'zoom-out',
   willChange: 'transform',
   borderRadius: '3px',
+})
+
+// Box-shadow lives on a sibling div so its appearance can fade via
+// `opacity` (compositor) instead of animating `box-shadow` (paint-bound).
+globalStyle('.medium-zoom-shadow', {
+  position: 'absolute',
+  zIndex: 9998,
+  pointerEvents: 'none',
+  borderRadius: '3px',
   boxShadow: 'var(--lumeo-shadow)',
+  opacity: 0,
+  willChange: 'transform, opacity',
+  transition: `transform 380ms ${SPRING}, opacity 380ms ${SPRING}`,
+})
+
+globalStyle('.medium-zoom--opened .medium-zoom-shadow', {
+  opacity: 1,
 })

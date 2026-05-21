@@ -15,6 +15,7 @@ import {
   cloneTarget,
   createCustomEvent,
   createOverlay,
+  createShadow,
   getImagesFromSelector,
   getScrollTop,
   isNode,
@@ -79,6 +80,7 @@ const mediumZoom = (
     zoomed: null,
     zoomedHd: null,
     template: null,
+    shadow: null,
   }
 
   const _handleClick = (event: MouseEvent): void => {
@@ -316,8 +318,10 @@ const mediumZoom = (
       scrollTop = getScrollTop()
       isAnimating = true
       active.zoomed = cloneTarget(active.original)
+      active.shadow = createShadow(active.original)
 
       document.body.appendChild(overlay)
+      document.body.appendChild(active.shadow)
 
       if (zoomOptions.template) {
         const template = isNode(zoomOptions.template)
@@ -421,6 +425,9 @@ const mediumZoom = (
         if (active.zoomedHd) {
           document.body.removeChild(active.zoomedHd)
         }
+        if (active.shadow) {
+          document.body.removeChild(active.shadow)
+        }
         document.body.removeChild(overlay)
         active.zoomed?.classList.remove('medium-zoom-image--opened')
         if (active.template) {
@@ -437,12 +444,23 @@ const mediumZoom = (
         active.zoomed = null
         active.zoomedHd = null
         active.template = null
+        active.shadow = null
 
         _updateGlobalEvents(false)
         resolve(zoom)
       }
 
       isAnimating = true
+
+      // Set the shadow's close-time transition BEFORE removing the body
+      // class — the body class drives shadow opacity via the CSS cascade,
+      // so the inline timing must be in effect when the class drops or
+      // the opacity fade runs at the entrance timing.
+      const exitTransitionShadow = `transform ${EXIT_DURATION_MS}ms ${SPRING_EASING}, opacity ${EXIT_DURATION_MS}ms ${SPRING_EASING}`
+      if (active.shadow) {
+        active.shadow.style.transition = exitTransitionShadow
+      }
+
       document.body.classList.remove('medium-zoom--opened')
       album.teardown()
       gestures.detach()
@@ -461,6 +479,9 @@ const mediumZoom = (
       if (active.zoomedHd) {
         active.zoomedHd.style.transition = exitTransition
         active.zoomedHd.style.transform = ''
+      }
+      if (active.shadow) {
+        active.shadow.style.transform = ''
       }
 
       // Fade the template out so the close is not too abrupt.
@@ -482,6 +503,7 @@ const mediumZoom = (
     getOptions: () => zoomOptions,
     isAnimating: () => isAnimating,
     cloneTarget,
+    createShadow,
     animate,
     close,
   })

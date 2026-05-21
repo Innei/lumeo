@@ -75,4 +75,8 @@ export const animate = (zoomOptions: ZoomOptions, active: ZoomActive): void => {
   if (active.zoomedHd) {
     active.zoomedHd.style.transform = transform
   }
+
+  if (active.shadow) {
+    active.shadow.style.transform = transform
+  }
 }

@@ -108,6 +108,7 @@ interface AlbumDeps {
   active: ZoomActive
   animate: (options: ZoomOptions, active: ZoomActive) => void
   cloneTarget: (image: HTMLImageElement) => HTMLImageElement
+  createShadow: (image: HTMLImageElement) => HTMLDivElement
   close: () => void
   getImages: () => HTMLImageElement[]
   getOptions: () => ZoomOptions
@@ -160,18 +161,25 @@ export const createAlbum = (deps: AlbumDeps): Album => {
     const direction = nextIndex > index ? 1 : -1
     const outgoing = active.zoomed
     const outgoingHd = active.zoomedHd
+    const outgoingShadow = active.shadow
     isSwapping = true
 
     const fadeOutgoing = (): Promise<void> => {
       if (!outgoing) return Promise.resolve()
       const baseTransform = outgoing.style.transform
-      outgoing.style.transition = `transform ${SWAP_DURATION_MS}ms ${SPRING}, opacity ${SWAP_DURATION_MS}ms ${SPRING}`
+      const swapTransition = `transform ${SWAP_DURATION_MS}ms ${SPRING}, opacity ${SWAP_DURATION_MS}ms ${SPRING}`
+      outgoing.style.transition = swapTransition
       outgoing.style.transform = `${baseTransform} translateX(${-direction * SWAP_OFFSET_PX}px)`
       outgoing.style.opacity = '0'
       if (outgoingHd) {
-        outgoingHd.style.transition = outgoing.style.transition
+        outgoingHd.style.transition = swapTransition
         outgoingHd.style.transform = `${outgoingHd.style.transform} translateX(${-direction * SWAP_OFFSET_PX}px)`
         outgoingHd.style.opacity = '0'
+      }
+      if (outgoingShadow) {
+        outgoingShadow.style.transition = swapTransition
+        outgoingShadow.style.transform = `${baseTransform} translateX(${-direction * SWAP_OFFSET_PX}px)`
+        outgoingShadow.style.opacity = '0'
       }
       return waitTransitionEnd(outgoing, 'opacity', SWAP_DURATION_MS + 80)
     }
@@ -185,24 +193,33 @@ export const createAlbum = (deps: AlbumDeps): Album => {
       active.original.classList.remove('medium-zoom-image--hidden')
       outgoing?.remove()
       outgoingHd?.remove()
+      outgoingShadow?.remove()
       active.zoomedHd = null
 
       // Clone before marking the new original as hidden — cloneNode() copies
       // the classList, so the clone would inherit `medium-zoom-image--hidden`
       // (visibility: hidden) and be invisible after swap.
       const nextClone = deps.cloneTarget(nextImage)
+      const nextShadow = deps.createShadow(nextImage)
       // Snap the clone into the zoomed position (no transition), then animate
       // from a translateX(±28px) + opacity:0 entrance state to the resting
       // position; the entrance offset rides on top of the zoom transform.
       nextClone.style.transition = 'none'
+      nextShadow.style.transition = 'none'
+      // Hold shadow at opacity 0 — the body still carries
+      // `.medium-zoom--opened`, whose cascade would otherwise snap the new
+      // shadow to opacity 1 before the entrance fade starts.
+      nextShadow.style.opacity = '0'
 
       index = nextIndex
       active.original = nextImage
       nextImage.classList.add('medium-zoom-image--hidden')
 
       active.zoomed = nextClone
+      active.shadow = nextShadow
       active.zoomed.classList.add('medium-zoom-image--opened')
       active.zoomed.addEventListener('click', deps.close)
+      document.body.appendChild(active.shadow)
       document.body.appendChild(active.zoomed)
 
       deps.animate(deps.getOptions(), active)
@@ -210,23 +227,30 @@ export const createAlbum = (deps: AlbumDeps): Album => {
       const baseTransform = active.zoomed.style.transform
       active.zoomed.style.transform = `${baseTransform} translateX(${direction * SWAP_OFFSET_PX}px)`
       active.zoomed.style.opacity = '0'
+      active.shadow.style.transform = active.zoomed.style.transform
 
       requestAnimationFrame(() => {
-        if (!active.zoomed) {
+        if (!active.zoomed || !active.shadow) {
           isSwapping = false
           return
         }
-        active.zoomed.style.transition = `transform ${SWAP_DURATION_MS}ms ${SPRING}, opacity ${SWAP_DURATION_MS}ms ${SPRING}`
+        const swapTransition = `transform ${SWAP_DURATION_MS}ms ${SPRING}, opacity ${SWAP_DURATION_MS}ms ${SPRING}`
+        active.zoomed.style.transition = swapTransition
         active.zoomed.style.transform = baseTransform
         active.zoomed.style.opacity = '1'
+        active.shadow.style.transition = swapTransition
+        active.shadow.style.transform = baseTransform
+        active.shadow.style.opacity = ''
 
         const settled = active.zoomed
+        const settledShadow = active.shadow
         waitTransitionEnd(settled, 'opacity', SWAP_DURATION_MS + 80).then(
           () => {
             // Restore the package default transition so click-to-close uses the
             // entrance/exit easing rather than this swap-specific override.
             settled.style.transition = ''
             settled.style.opacity = ''
+            settledShadow.style.transition = ''
             isSwapping = false
           },
         )
