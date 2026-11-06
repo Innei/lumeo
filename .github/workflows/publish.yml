@@ -5,25 +5,63 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Validate the package without publishing it'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
+    if: github.repository == 'Innei/lumeo'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: pnpm
-          registry-url: 'https://registry.npmjs.org/'
+          node-version: '24'
+          package-manager-cache: false
+
+      # npm >=11.5.1 supports GitHub Actions OIDC authentication. Use npm for
+      # publishing even though pnpm owns dependency installation and builds.
+      - name: Install npm with trusted publishing support
+        run: npm install --global npm@11.21.0 --registry=https://registry.npmjs.org/
+
+      - name: Validate package identity and release tag
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          REQUIRE_RELEASE_TAG: ${{ github.event_name == 'push' || !inputs.dry-run }}
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+
+          const pkg = JSON.parse(readFileSync('packages/lumeo/package.json', 'utf8'))
+          assert.equal(pkg.name, 'lumeo')
+          assert.equal(pkg.repository.url, 'git+https://github.com/Innei/lumeo.git')
+          assert.equal(pkg.repository.directory, 'packages/lumeo')
+          if (process.env.REQUIRE_RELEASE_TAG === 'true') {
+            assert.equal(process.env.REF_TYPE, 'tag', 'Publishing requires a version tag')
+            assert.equal(process.env.REF_NAME, `v${pkg.version}`, 'Tag must match the package version')
+          }
+          NODE
 
       - run: pnpm install --frozen-lockfile
 
@@ -31,7 +69,12 @@ jobs:
 
       - run: pnpm --filter lumeo build
 
-      - name: Publish to npm
-        run: pnpm --filter lumeo publish --access public --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Validate npm package without publishing
+        if: github.event_name == 'workflow_dispatch' && inputs.dry-run
+        working-directory: packages/lumeo
+        run: npm pack --dry-run --json
+
+      - name: Publish to npm using OIDC
+        if: github.event_name == 'push' || !inputs.dry-run
+        working-directory: packages/lumeo
+        run: npm publish --access public --registry=https://registry.npmjs.org/
