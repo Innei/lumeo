@@ -1,6 +1,6 @@
 {
   "name": "lumeo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Image zoom and multi-image lightbox — a modern TypeScript fork of medium-zoom with album navigation, gestures, keyboard control, and a thumbnail strip.",
   "type": "module",
   "license": "MIT",
