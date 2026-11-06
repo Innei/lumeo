@@ -1,5 +1,7 @@
 import { globalStyle } from '@vanilla-extract/css'
 
+import { OPEN_DURATION_MS } from './transition'
+
 const SPRING = 'cubic-bezier(0.32, 0.72, 0, 1)'
 
 globalStyle(':root', {
@@ -20,7 +22,7 @@ globalStyle('.medium-zoom-overlay', {
   zIndex: 9998,
   background: 'var(--lumeo-overlay-bg, #ffffff)',
   opacity: 0,
-  transition: `opacity 380ms ${SPRING}`,
+  transition: `opacity ${OPEN_DURATION_MS}ms ${SPRING}`,
   willChange: 'opacity',
 })
 
@@ -31,7 +33,7 @@ globalStyle('.medium-zoom--opened .medium-zoom-overlay', {
 
 globalStyle('.medium-zoom-image', {
   cursor: 'zoom-in',
-  transition: `transform 380ms ${SPRING}`,
+  transition: `transform ${OPEN_DURATION_MS}ms ${SPRING}`,
 })
 
 globalStyle('.medium-zoom-image--hidden', {
@@ -56,7 +58,7 @@ globalStyle('.medium-zoom-shadow', {
   boxShadow: 'var(--lumeo-shadow)',
   opacity: 0,
   willChange: 'transform, opacity',
-  transition: `transform 380ms ${SPRING}, opacity 380ms ${SPRING}`,
+  transition: `transform ${OPEN_DURATION_MS}ms ${SPRING}, opacity ${OPEN_DURATION_MS}ms ${SPRING}`,
 })
 
 globalStyle('.medium-zoom--opened .medium-zoom-shadow', {

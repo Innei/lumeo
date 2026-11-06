@@ -79,6 +79,10 @@ export const cloneTarget = (template: HTMLImageElement): HTMLImageElement => {
     0
 
   clone.removeAttribute('id')
+  // Frameworks may replace the original className after attach(), e.g. when a
+  // lazy image finishes loading. The clone must always own its zoom styles.
+  clone.classList.add('medium-zoom-image')
+  clone.classList.remove('medium-zoom-image--hidden')
   clone.style.position = 'absolute'
   clone.style.top = `${top + scrollTop}px`
   clone.style.left = `${left + scrollLeft}px`
