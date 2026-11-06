@@ -3,6 +3,7 @@ import type { ZoomActive } from './types'
 interface GesturesDeps {
   active: ZoomActive
   close: () => void
+  isAnimating: () => boolean
 }
 
 export interface Gestures {
@@ -39,7 +40,7 @@ export const createGestures = (deps: GesturesDeps): Gestures => {
   }
 
   const onPointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0) {
+    if (event.button !== 0 || deps.isAnimating()) {
       return
     }
     const target = deps.active.zoomed
