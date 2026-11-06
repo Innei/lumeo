@@ -61,8 +61,37 @@ git tag v0.2.0
 git push --follow-tags
 ```
 
-The `Publish` workflow runs on tag push, builds, tests, and publishes to npm
-with provenance. Configure an `NPM_TOKEN` repo secret first.
+The `Publish` workflow in `.github/workflows/publish.yml` builds and tests the
+library, then publishes with npm Trusted Publishing (OIDC). It uses a
+GitHub-hosted runner, Node 24 and npm 11.21.0. No `NPM_TOKEN` secret is used;
+npm generates provenance automatically for the public package and repository.
+
+Before releasing, open the `lumeo` package's npm settings and configure a GitHub
+Actions trusted publisher with these exact values:
+
+| Field                | Value                                                  |
+| -------------------- | ------------------------------------------------------ |
+| Package              | `lumeo`                                                |
+| Organization or user | `Innei`                                                |
+| Repository           | `lumeo`                                                |
+| Workflow filename    | `publish.yml`                                          |
+| Environment name     | Leave empty; the job does not use a GitHub environment |
+| Allowed action       | Allow direct publishing with `npm publish`             |
+
+The workflow filename is case-sensitive and must omit `.github/workflows/`.
+The package's `repository.url` is `git+https://github.com/Innei/lumeo.git` and
+its monorepo directory is `packages/lumeo`.
+
+Tag pushes publish only when the tag exactly matches `v` plus the package
+version. Manual runs default to `dry-run: true`, which checks the package
+without uploading a release. To publish manually, select the matching version
+tag and explicitly set `dry-run: false`.
+
+A dry-run verifies packaging, not npm's OIDC authorization. The first actual
+publish validates the trusted publisher. npm currently requires that first
+publish within two days of creating the publisher, so configure it close to
+the intended release. See the [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/)
+for setup and authentication requirements.
 
 ## Credits
 
