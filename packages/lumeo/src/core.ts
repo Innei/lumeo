@@ -98,6 +98,11 @@ const mediumZoom = (
       return
     }
 
+    // A programmatic open can run before this same click bubbles here.
+    if (target === active.original) {
+      return
+    }
+
     if (!images.includes(target as HTMLImageElement)) {
       return
     }
@@ -213,10 +218,6 @@ const mediumZoom = (
   }
 
   const detach = (...selectors: ZoomSelector[]): Zoom => {
-    if (active.zoomed) {
-      close()
-    }
-
     const imagesToDetach =
       selectors.length > 0
         ? selectors.reduce<HTMLImageElement[]>(
@@ -224,6 +225,10 @@ const mediumZoom = (
             [],
           )
         : images
+
+    if (active.original && imagesToDetach.includes(active.original)) {
+      close()
+    }
 
     imagesToDetach.forEach((image) => {
       image.classList.remove('medium-zoom-image')
@@ -311,6 +316,8 @@ const mediumZoom = (
     opening = result
 
     const _handleOpenEnd = (): void => {
+      // Ignore inertia accumulated while the opening animation was running.
+      scrollTop = getScrollTop()
       isAnimating = false
       opening = null
       active.original?.dispatchEvent(

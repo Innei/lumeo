@@ -33,11 +33,89 @@ afterEach(async () => {
   await vi.advanceTimersByTimeAsync(2000)
   document.body.replaceChildren()
   document.body.className = ''
+  window.scrollY = 0
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
 
 describe('zoom lifecycle', () => {
+  it('does not handle a programmatic opening click twice across repeated images', async () => {
+    const images = [image(), image(), image()]
+    images.forEach((img) =>
+      img.addEventListener('click', () => {
+        zoom.attach(...images)
+        void zoom.open({ target: img })
+      }),
+    )
+    for (const img of images) {
+      img.click()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(zoom.getZoomedImage()).toBe(img)
+      clone().click()
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(zoom.getZoomedImage()).toBeNull()
+    }
+  })
+
+  it.each([false, true])(
+    'keeps the active image when another image detaches (opened=%s)',
+    async (opened) => {
+      const active = image()
+      const other = image()
+      zoom.attach(active, other)
+      void zoom.open({ target: active })
+      if (opened) await vi.advanceTimersByTimeAsync(1000)
+      zoom.detach(other)
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(zoom.getZoomedImage()).toBe(active)
+      zoom.detach(active)
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(zoom.getZoomedImage()).toBeNull()
+    },
+  )
+
+  it('still opens attached images with the document click handler', async () => {
+    const img = image()
+    zoom.attach(img)
+    img.click()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(zoom.getZoomedImage()).toBe(img)
+    clone().click()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(zoom.getZoomedImage()).toBeNull()
+  })
+
+  it.each([false, true])(
+    'closes during opening when detaching the active image (all=%s)',
+    async (all) => {
+      const img = image()
+      zoom.attach(img, image())
+      void zoom.open({ target: img })
+      if (all) zoom.detach()
+      else zoom.detach(img)
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(zoom.getZoomedImage()).toBeNull()
+      expect(document.querySelector('.medium-zoom-overlay')).toBeNull()
+    },
+  )
+
+  it('resets the scroll baseline after opening but still closes on subsequent scrolling', async () => {
+    window.scrollY = 0
+    const img = image()
+    zoom.attach(img)
+    void zoom.open()
+    window.scrollY = 200
+    document.dispatchEvent(new Event('scroll'))
+    await vi.advanceTimersByTimeAsync(1000)
+    document.dispatchEvent(new Event('scroll'))
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(zoom.getZoomedImage()).toBe(img)
+    window.scrollY += 100
+    document.dispatchEvent(new Event('scroll'))
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(zoom.getZoomedImage()).toBeNull()
+  })
+
   it('keeps transition styles after a lazy renderer replaces the original class', async () => {
     const first = image()
     const lazy = image()
